@@ -1,7 +1,4 @@
-package com.example.covidtracker
-
-// latitude longitude timestamp
-data class GeoPoint(var lat: Double, var long: Double, var time: Long)
+package com.bbirds.covidtracker
 
 object ContactService {
 
