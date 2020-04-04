@@ -18,14 +18,14 @@ class ContactServiceTest {
 
     @Test
     fun contact() {
-        val a = arrayOf<GeoPoint>(
+        val a = listOf<GeoPoint>(
             GeoPoint(52.4022557,16.9408745, 0),
             GeoPoint(52.40253059,16.94299961, 120),
             GeoPoint(52.40078283,16.94826952, 400),
             GeoPoint(52.40270078,16.95000781, 520),
             GeoPoint(52.40383318,16.94983608, 550)
         )
-        val b = arrayOf<GeoPoint>(
+        val b = listOf<GeoPoint>(
             GeoPoint(52.40383318,16.94983608, 400),
             GeoPoint(52.40301497,16.94994332, 430),
             GeoPoint(52.40257641,16.94987892, 500),
