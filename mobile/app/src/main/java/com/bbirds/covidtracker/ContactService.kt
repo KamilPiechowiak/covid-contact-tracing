@@ -15,6 +15,7 @@ object ContactService {
         return dx*dx+dy*dy
     }
 
+
     fun contact(me: List<GeoPoint>, sick: ArrayList<GeoPoint>): List<GeoPoint> {
         val distDiffSq = distDiff * distDiff
         var j = 0
