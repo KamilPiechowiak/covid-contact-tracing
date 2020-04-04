@@ -52,6 +52,33 @@ class SegmentContactServiceTest {
             GeoPoint(52.40257641,16.94987892, 500),
             GeoPoint(52.40122796,16.94852656, 600)
         )
-        print(service.contact(a, b))
+       assertEquals(listOf<GeoPoint>(GeoPoint(lat=52.40270078, long=16.95000781, time=520), GeoPoint(lat=52.40383318, long=16.94983608, time=550)),
+           service.contact(a, b))
+    }
+
+    @Test
+    fun cotactWithBreaks() {
+        val a = listOf<GeoPoint>(
+            TrackingService.BREAK_RECORDING,
+            TrackingService.BREAK_RECORDING,
+            GeoPoint(52.4022557,16.9408745, 0),
+            GeoPoint(52.40253059,16.94299961, 120),
+            TrackingService.BREAK_RECORDING,
+            TrackingService.BREAK_RECORDING,
+            GeoPoint(52.40078283,16.94826952, 400),
+            TrackingService.BREAK_RECORDING,
+            TrackingService.BREAK_RECORDING,
+            TrackingService.BREAK_RECORDING,
+            GeoPoint(52.40270078,16.95000781, 520),
+            GeoPoint(52.40383318,16.94983608, 550),
+            TrackingService.BREAK_RECORDING
+        )
+        val b = arrayListOf<GeoPoint>(
+            GeoPoint(52.40383318,16.94983608, 400),
+            GeoPoint(52.40301497,16.94994332, 430),
+            GeoPoint(52.40257641,16.94987892, 500),
+            GeoPoint(52.40122796,16.94852656, 600)
+        )
+        assertEquals(listOf<GeoPoint>(GeoPoint(lat=52.40383318, long=16.94983608, time=550)), service.contact(a, b))
     }
 }

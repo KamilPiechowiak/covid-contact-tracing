@@ -55,23 +55,49 @@ object SegmentContactService {
         ).min()!!
     }
 
-    fun contact(me: List<GeoPoint>, sick: ArrayList<GeoPoint>): List<GeoPoint> {
-        var i=1
-        var j=1
-        val dangerousPoints = mutableSetOf<GeoPoint>()
-        while(j < sick.size && sick[j].time < me[0].time) {
-            j++
-        }
-        while(i < me.size && me[i].time < sick[0].time) {
+    fun pointsToSegments(points : List<GeoPoint>) : List<GeoSegment> {
+        val segments = mutableListOf<GeoSegment>()
+        var i = 0
+        while(i < points.size && points[i] == TrackingService.BREAK_RECORDING) {
             i++
         }
-        while(i < me.size && j < sick.size) {
-            val d = computeDist(me[i-1], me[i], sick[j-1], sick[j])
-            if(d < distDiff) {
-                dangerousPoints.add(me[i])
+        var previousPoint = points[i]
+        var previousIndex = i
+        i++
+        while(i < points.size) {
+            if(points[i] == TrackingService.BREAK_RECORDING) {
+                i++
+                continue
             }
-//            print("" + d + " " + " " + me[i-1] + " " + me[i] + " " + sick[j-1] + " " + sick[j] + "\n")
-            if(me[i].time < sick[j].time) {
+            segments.add(GeoSegment(previousPoint, points[i], (i-previousIndex)==1))
+            previousPoint = points[i]
+            previousIndex = i
+            i++
+        }
+        return segments
+    }
+
+    fun contact(me: List<GeoPoint>, sick: ArrayList<GeoPoint>): List<GeoPoint> {
+        val mySegments = pointsToSegments(me)
+        val sickSegments = pointsToSegments(sick)
+        var i=0
+        var j=0
+        val dangerousPoints = mutableSetOf<GeoPoint>()
+        while(j < sickSegments.size && sickSegments[j].end.time < mySegments[0].begin.time) {
+            j++
+        }
+        while(i < mySegments.size && mySegments[i].end.time < sickSegments[0].begin.time) {
+            i++
+        }
+        while(i < mySegments.size && j < sickSegments.size) {
+            if(mySegments[i].valid && sickSegments[j].valid) {
+                val d = computeDist(mySegments[i].begin, mySegments[i].end, sickSegments[j].begin, sickSegments[j].end)
+                if(d < distDiff) {
+                    dangerousPoints.add(mySegments[i].end)
+                }
+            }
+//            print("" + mySegments[i] + " " + sickSegments[j] + "\n")
+            if(mySegments[i].end.time < sickSegments[j].end.time) {
                 i++
             } else {
                 j++
