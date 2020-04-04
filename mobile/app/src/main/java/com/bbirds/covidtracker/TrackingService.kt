@@ -9,18 +9,27 @@ import android.content.Intent
 import android.location.Location
 import android.location.LocationManager
 import android.os.Binder
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
 
 class TrackingService : Service() {
+
+    companion object {
+        val TAG = "TrackingService"
+    }
+
     private val binder = LocationServiceBinder()
-    private val TAG = "TrackingService"
     private var mLocationListener: LocationListener? = null
     private var mLocationManager: LocationManager? = null
     private val notificationManager: NotificationManager? = null
     private val LOCATION_INTERVAL = 500
     private val LOCATION_DISTANCE = 10
+    var isTracking: Boolean = false;
+
     override fun onBind(intent: Intent): IBinder? {
         return binder
     }
@@ -32,6 +41,7 @@ class TrackingService : Service() {
         private var mLastLocation: Location
         override fun onLocationChanged(location: Location) {
             mLastLocation = location
+
             Log.i(TAG, "LocationChanged: $location")
         }
 
@@ -62,19 +72,22 @@ class TrackingService : Service() {
     }
 
     override fun onCreate() {
+        super.onCreate()
         Log.i(TAG, "onCreate")
-        startForeground(12345678, notification)
+        startForeground(123123123, notification)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         if (mLocationManager != null) {
             try {
-                mLocationManager!!.removeUpdates(mLocationListener)
+                mLocationManager!!.removeUpdates(mLocationListener!!)
             } catch (ex: Exception) {
-                Log.i(TAG, "fail to remove location listners, ignore", ex)
+                Log.i(TAG, "fail to remove location listeners, ignore", ex)
             }
         }
+        Log.i(TAG, "onDestroy")
+        isTracking = false;
     }
 
     private fun initializeLocationManager() {
@@ -93,10 +106,14 @@ class TrackingService : Service() {
                 LocationManager.GPS_PROVIDER,
                 LOCATION_INTERVAL.toLong(),
                 LOCATION_DISTANCE.toFloat(),
-                mLocationListener
+                mLocationListener!!
             )
-        } catch (ex: SecurityException) { // Log.i(TAG, "fail to request location update, ignore", ex);
-        } catch (ex: IllegalArgumentException) { // Log.d(TAG, "gps provider does not exist " + ex.getMessage());
+            isTracking = true;
+            Log.i(TAG, "Started tracking")
+        } catch (ex: SecurityException) {
+            Log.i(TAG, "fail to request location update, ignore $ex")
+        } catch (ex: IllegalArgumentException) {
+            Log.d(TAG, "gps provider does not exist $ex")
         }
     }
 
@@ -105,20 +122,23 @@ class TrackingService : Service() {
     }
 
     private val notification: Notification
-        private get() {
+        @RequiresApi(Build.VERSION_CODES.O)
+        get() {
             val channel =
                 NotificationChannel(
                     "channel_01",
-                    "My Channel",
+                    "COVID-19_Contact_Detector",
                     NotificationManager.IMPORTANCE_DEFAULT
                 )
             val notificationManager = getSystemService(
                 NotificationManager::class.java
             )
-            notificationManager.createNotificationChannel(channel)
+            notificationManager!!.createNotificationChannel(channel)
             val builder =
-                Notification.Builder(applicationContext, "channel_01")
+                NotificationCompat.Builder(applicationContext, "channel_01")
                     .setAutoCancel(true)
+                    .setContentTitle("COVID-19 Contact Detector")
+                    .setContentText("")
             return builder.build()
         }
 
