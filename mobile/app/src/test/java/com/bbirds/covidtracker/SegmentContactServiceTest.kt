@@ -46,7 +46,7 @@ class SegmentContactServiceTest {
             GeoPoint(52.40270078,16.95000781, 520),
             GeoPoint(52.40383318,16.94983608, 550)
         )
-        val b = listOf<GeoPoint>(
+        val b = arrayListOf<GeoPoint>(
             GeoPoint(52.40383318,16.94983608, 400),
             GeoPoint(52.40301497,16.94994332, 430),
             GeoPoint(52.40257641,16.94987892, 500),

@@ -55,7 +55,7 @@ object SegmentContactService {
         ).min()!!
     }
 
-    fun contact(me: List<GeoPoint>, sick: List<GeoPoint>): List<GeoPoint> {
+    fun contact(me: List<GeoPoint>, sick: ArrayList<GeoPoint>): List<GeoPoint> {
         var i=1
         var j=1
         val dangerousPoints = mutableSetOf<GeoPoint>()
