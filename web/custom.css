@@ -1,0 +1,12 @@
+.header {
+    width: 400px;
+    overflow: scroll;
+    min-width: 400px;
+    max-width: 400px;
+    height: 100vh;
+    padding: 1em;
+}
+
+.map {
+    height: 100vh;
+}
