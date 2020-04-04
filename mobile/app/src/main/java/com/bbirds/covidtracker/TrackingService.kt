@@ -9,30 +9,42 @@ import android.content.Intent
 import android.location.Location
 import android.location.LocationManager
 import android.os.Binder
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
+import java.util.*
+import kotlin.concurrent.timerTask
+
 
 class TrackingService : Service() {
+
+    companion object {
+        const val TAG = "TrackingService"
+        const val RETENTION_PERIOD = 60*60*1000L
+        const val LOCATION_INTERVAL = 5_000L
+        const val LOCATION_DISTANCE = 25L
+        val BREAK_RECORDING = GeoPoint(-1_000.0, -1_000.0, -1)
+    }
+
     private val binder = LocationServiceBinder()
-    private val TAG = "TrackingService"
     private var mLocationListener: LocationListener? = null
+    private var recentLocations: LinkedList<GeoPoint> = LinkedList()
     private var mLocationManager: LocationManager? = null
-    private val notificationManager: NotificationManager? = null
-    private val LOCATION_INTERVAL = 500
-    private val LOCATION_DISTANCE = 10
+    var isTracking: Boolean = false;
+
     override fun onBind(intent: Intent): IBinder? {
         return binder
     }
 
     private inner class LocationListener(provider: String?) :
         android.location.LocationListener {
-        private val lastLocation: Location? = null
         private val TAG = "LocationListener"
-        private var mLastLocation: Location
+
         override fun onLocationChanged(location: Location) {
-            mLastLocation = location
-            Log.i(TAG, "LocationChanged: $location")
+            recentLocations.add(GeoPoint(location.longitude, location.latitude, location.time))
         }
 
         override fun onProviderDisabled(provider: String) {
@@ -52,7 +64,9 @@ class TrackingService : Service() {
         }
 
         init {
-            mLastLocation = Location(provider)
+            recentLocations.add(BREAK_RECORDING)
+            var location = Location(provider)
+            recentLocations.add(GeoPoint(location.longitude, location.latitude, location.time))
         }
     }
 
@@ -62,19 +76,38 @@ class TrackingService : Service() {
     }
 
     override fun onCreate() {
+        super.onCreate()
         Log.i(TAG, "onCreate")
-        startForeground(12345678, notification)
+        startForeground(123123123, notification)
+
+        Timer().schedule(
+            timerTask {
+                heartbeat()
+            },
+            RETENTION_PERIOD / 2,
+            RETENTION_PERIOD
+        )
+
+        Timer().schedule(
+            timerTask {
+                retention()
+            },
+            0,
+            RETENTION_PERIOD
+        )
     }
 
     override fun onDestroy() {
         super.onDestroy()
         if (mLocationManager != null) {
             try {
-                mLocationManager!!.removeUpdates(mLocationListener)
+                mLocationManager!!.removeUpdates(mLocationListener!!)
             } catch (ex: Exception) {
-                Log.i(TAG, "fail to remove location listners, ignore", ex)
+                Log.i(TAG, "fail to remove location listeners, ignore", ex)
             }
         }
+        Log.i(TAG, "onDestroy")
+        isTracking = false;
     }
 
     private fun initializeLocationManager() {
@@ -82,6 +115,21 @@ class TrackingService : Service() {
             mLocationManager =
                 applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         }
+    }
+
+    private fun retention() {
+        val currentDate = Date()
+        val calendar = Calendar.getInstance()
+        calendar.time = currentDate
+        calendar.add(Calendar.DATE, -14)
+        val twoWeaksAgo = calendar.time
+        while (recentLocations.size > 0 && recentLocations[0].time <= twoWeaksAgo.time ) {
+            recentLocations.removeFirst()
+        }
+    }
+
+    private fun heartbeat() {
+
     }
 
     fun startTracking() {
@@ -93,10 +141,14 @@ class TrackingService : Service() {
                 LocationManager.GPS_PROVIDER,
                 LOCATION_INTERVAL.toLong(),
                 LOCATION_DISTANCE.toFloat(),
-                mLocationListener
+                mLocationListener!!
             )
-        } catch (ex: SecurityException) { // Log.i(TAG, "fail to request location update, ignore", ex);
-        } catch (ex: IllegalArgumentException) { // Log.d(TAG, "gps provider does not exist " + ex.getMessage());
+            isTracking = true;
+            Log.i(TAG, "Started tracking")
+        } catch (ex: SecurityException) {
+            Log.i(TAG, "fail to request location update, ignore $ex")
+        } catch (ex: IllegalArgumentException) {
+            Log.d(TAG, "gps provider does not exist $ex")
         }
     }
 
@@ -105,20 +157,23 @@ class TrackingService : Service() {
     }
 
     private val notification: Notification
-        private get() {
+        @RequiresApi(Build.VERSION_CODES.O)
+        get() {
             val channel =
                 NotificationChannel(
                     "channel_01",
-                    "My Channel",
+                    "COVID-19_Contact_Detector",
                     NotificationManager.IMPORTANCE_DEFAULT
                 )
             val notificationManager = getSystemService(
                 NotificationManager::class.java
             )
-            notificationManager.createNotificationChannel(channel)
+            notificationManager!!.createNotificationChannel(channel)
             val builder =
-                Notification.Builder(applicationContext, "channel_01")
+                NotificationCompat.Builder(applicationContext, "channel_01")
                     .setAutoCancel(true)
+                    .setContentTitle("COVID-19 Contact Detector")
+                    .setContentText("")
             return builder.build()
         }
 

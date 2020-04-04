@@ -14,7 +14,7 @@
         android:indeterminate="true"
         android:indeterminateTint="@color/colorPrimary"
         android:indeterminateTintMode="src_atop"
-        android:visibility="invisible"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -27,6 +27,7 @@
         android:layout_width="@dimen/button_diameter_large"
         android:layout_height="@dimen/button_diameter_large"
         android:background="@drawable/rounded_button"
+        android:enabled="true"
         android:soundEffectsEnabled="true"
         android:text="Track"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -38,10 +39,10 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/button_diameter_large"
+        android:text="@string/gps_not_ready"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/trackButton" />
+        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

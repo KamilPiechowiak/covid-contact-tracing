@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">COVID-19 Tracker</string>
+    <string name="app_name">COVID-19 Contact Detector</string>
+    <string name="tracking_off_description">Stop tracking</string>
+    <string name="tracking_on_description">Track</string>
+    <string name="gps_ready">GPS ready</string>
+    <string name="gps_not_ready">GPS not ready</string>
 </resources>
