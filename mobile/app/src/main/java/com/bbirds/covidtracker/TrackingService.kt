@@ -1,6 +1,9 @@
 package com.bbirds.covidtracker
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -20,9 +23,11 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.bbirds.covidtracker.data.AppDatabase
 import com.bbirds.covidtracker.data.GeoPoint
+import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.concurrent.timerTask
 
 
@@ -63,7 +68,7 @@ class TrackingService : Service() {
                     GeoPoint(
                         location.latitude,
                         location.longitude,
-                        location.time
+                        location.time / 1000
                     )
                 )
             }
@@ -160,16 +165,41 @@ class TrackingService : Service() {
     }
 
     private fun heartbeat() {
-        val url = "http://" + getString(R.string.python_backend_host)
-        val stringRequest = StringRequest(
-            Request.Method.GET, url,
-            Response.Listener<String> { response -> heartbeatCallback(response)},
-            Response.ErrorListener { er -> Log.e(TAG, "Response Error $er") })
-        queue!!.add(stringRequest)
+        if (recentLocations.size > 0) {
+            val url = "http://${getString(R.string.python_backend_host)}/heartbeat/$consumerOffset"
+            val stringRequest = StringRequest(
+                Request.Method.GET, url,
+                Response.Listener<String> { response -> heartbeatCallback(response) },
+                Response.ErrorListener { er -> Log.e(TAG, "Response Error $er") })
+            queue!!.add(stringRequest)
+        }
     }
 
     private fun heartbeatCallback(response: String) {
-        Log.d(TAG, response)
+        val mapper = ObjectMapper()
+        var rootNode = mapper.readTree(response)
+        if (rootNode.isArray) {
+            for (arrayNode in rootNode) {
+                var sickPointsList: ArrayList<GeoPoint> = ArrayList(arrayNode.size())
+                if (rootNode.isArray) {
+                    for (pointNode in arrayNode) {
+                        sickPointsList.add(
+                            GeoPoint(
+                                latitude = pointNode.get(0).doubleValue(),
+                                longitude = pointNode.get(1).doubleValue(),
+                                time = pointNode.get(2).longValue()))
+                    }
+                }
+                synchronized(recentLocations) {
+                    var result = if (recentLocations.size > 0 && sickPointsList.size > 0) {
+                        SegmentContactService.contact(recentLocations, sickPointsList)
+                    } else {
+                        null
+                    }
+//                    result?.
+                }
+            }
+        }
     }
 
     fun startTracking() {
