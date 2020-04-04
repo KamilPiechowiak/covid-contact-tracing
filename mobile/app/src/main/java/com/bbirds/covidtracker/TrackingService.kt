@@ -1,11 +1,9 @@
 package com.bbirds.covidtracker
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.location.Location
 import android.location.LocationManager
 import android.os.Binder
@@ -15,19 +13,28 @@ import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import com.android.volley.Request
+import com.android.volley.RequestQueue
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.bbirds.covidtracker.data.AppDatabase
 import com.bbirds.covidtracker.data.GeoPoint
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.concurrent.timerTask
-import kotlinx.coroutines.*
+
 
 class TrackingService : Service() {
 
     companion object {
+        const val PREFS_FILENAME = "com.bbirds.covidtracker.prefs"
         const val TAG = "TrackingService"
-        const val RETENTION_PERIOD = 60*60*1000L
+        const val RETENTION_PERIOD = 1000L//60*60*1000L
         const val LOCATION_INTERVAL = 5_000L
         const val LOCATION_DISTANCE = 25L
+        const val ID = 123123123
         val BREAK_RECORDING =
             GeoPoint(-1_000.0, -1_000.0, -1)
     }
@@ -36,7 +43,11 @@ class TrackingService : Service() {
     private var mLocationListener: LocationListener? = null
     private var recentLocations: LinkedList<GeoPoint> = LinkedList()
     private var mLocationManager: LocationManager? = null
-    var isTracking: Boolean = false;
+    private var queue: RequestQueue? = null
+    private var retentionTimer: Timer = Timer()
+    private var heartbeatTimer: Timer? = null
+    var isTracking: Boolean = false
+    var consumerOffset: Int = 0
 
     override fun onBind(intent: Intent): IBinder? {
         return binder
@@ -90,29 +101,21 @@ class TrackingService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "onCreate")
+        queue = Volley.newRequestQueue(applicationContext)
         GlobalScope.launch {
-            synchronized(recentLocations) {
-                var persistedLocations = AppDatabase(applicationContext).geoPointDAO().getAll()
-                recentLocations = LinkedList()
-                recentLocations.addAll(persistedLocations)
-            }
+            loadRecentLocations()
+            loadOffset()
+
             Log.d(TAG, recentLocations.toString())
 
-            startForeground(123123123, notification)
+            startForeground(ID, notification)
 
-            Timer().schedule(
+            heartbeatTimer = Timer()
+            heartbeatTimer!!.schedule(
                 timerTask {
                     heartbeat()
                 },
                 RETENTION_PERIOD / 2,
-                RETENTION_PERIOD
-            )
-
-            Timer().schedule(
-                timerTask {
-                    retention()
-                },
-                0,
                 RETENTION_PERIOD
             )
         }
@@ -129,10 +132,10 @@ class TrackingService : Service() {
             }
         }
         isTracking = false;
+        heartbeatTimer!!.cancel()
         GlobalScope.launch {
-            synchronized(recentLocations) {
-                AppDatabase(applicationContext).geoPointDAO().insertAll(recentLocations)
-            }
+            saveRecentLocations()
+            saveOffset()
         }
     }
 
@@ -150,14 +153,23 @@ class TrackingService : Service() {
         calendar.add(Calendar.DATE, -14)
         val twoWeaksAgo = calendar.time
         synchronized(recentLocations) {
-            while (recentLocations.size > 0 && recentLocations[0].time!! <= twoWeaksAgo.time) {
+            while (recentLocations.size > 0 && recentLocations[0].time <= twoWeaksAgo.time) {
                 recentLocations.removeFirst()
             }
         }
     }
 
     private fun heartbeat() {
+        val url = "http://" + getString(R.string.python_backend_host)
+        val stringRequest = StringRequest(
+            Request.Method.GET, url,
+            Response.Listener<String> { response -> heartbeatCallback(response)},
+            Response.ErrorListener { er -> Log.e(TAG, "Response Error $er") })
+        queue!!.add(stringRequest)
+    }
 
+    private fun heartbeatCallback(response: String) {
+        Log.d(TAG, response)
     }
 
     fun startTracking() {
@@ -167,11 +179,18 @@ class TrackingService : Service() {
         try {
             mLocationManager!!.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
-                LOCATION_INTERVAL.toLong(),
+                LOCATION_INTERVAL,
                 LOCATION_DISTANCE.toFloat(),
                 mLocationListener!!
             )
-            isTracking = true;
+            isTracking = true
+            retentionTimer.schedule(
+                timerTask {
+                    retention()
+                },
+                0,
+                RETENTION_PERIOD
+            )
             Log.i(TAG, "Started tracking")
         } catch (ex: SecurityException) {
             Log.i(TAG, "fail to request location update, ignore $ex")
@@ -209,4 +228,37 @@ class TrackingService : Service() {
         val service: TrackingService
             get() = this@TrackingService
     }
+
+    private fun saveOffset() {
+        synchronized(consumerOffset) {
+            val sharedPreferences: SharedPreferences =
+                getSharedPreferences(PREFS_FILENAME, Context.MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
+            editor.putInt("OFFSET", consumerOffset)
+            editor.apply()
+        }
+    }
+
+    private fun loadOffset() {
+        synchronized(consumerOffset) {
+            val sharedPreferences: SharedPreferences =
+                getSharedPreferences(PREFS_FILENAME, Context.MODE_PRIVATE)
+            consumerOffset = sharedPreferences.getInt("OFFSET", 0)
+        }
+    }
+
+    private fun saveRecentLocations() {
+        synchronized(recentLocations) {
+            AppDatabase(applicationContext).geoPointDAO().insertAll(recentLocations)
+        }
+    }
+
+    private fun loadRecentLocations() {
+        synchronized(recentLocations) {
+            var persistedLocations = AppDatabase(applicationContext).geoPointDAO().getAll()
+            recentLocations = LinkedList()
+            recentLocations.addAll(persistedLocations)
+        }
+    }
+
 }
