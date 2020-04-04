@@ -15,9 +15,11 @@ import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import com.bbirds.covidtracker.data.AppDatabase
+import com.bbirds.covidtracker.data.GeoPoint
 import java.util.*
 import kotlin.concurrent.timerTask
-
+import kotlinx.coroutines.*
 
 class TrackingService : Service() {
 
@@ -26,7 +28,8 @@ class TrackingService : Service() {
         const val RETENTION_PERIOD = 60*60*1000L
         const val LOCATION_INTERVAL = 5_000L
         const val LOCATION_DISTANCE = 25L
-        val BREAK_RECORDING = GeoPoint(-1_000.0, -1_000.0, -1)
+        val BREAK_RECORDING =
+            GeoPoint(-1_000.0, -1_000.0, -1)
     }
 
     private val binder = LocationServiceBinder()
@@ -44,7 +47,13 @@ class TrackingService : Service() {
         private val TAG = "LocationListener"
 
         override fun onLocationChanged(location: Location) {
-            recentLocations.add(GeoPoint(location.longitude, location.latitude, location.time))
+            recentLocations.add(
+                GeoPoint(
+                    location.longitude,
+                    location.latitude,
+                    location.time
+                )
+            )
         }
 
         override fun onProviderDisabled(provider: String) {
@@ -66,7 +75,13 @@ class TrackingService : Service() {
         init {
             recentLocations.add(BREAK_RECORDING)
             var location = Location(provider)
-            recentLocations.add(GeoPoint(location.longitude, location.latitude, location.time))
+            recentLocations.add(
+                GeoPoint(
+                    location.longitude,
+                    location.latitude,
+                    location.time
+                )
+            )
         }
     }
 
@@ -78,6 +93,13 @@ class TrackingService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "onCreate")
+
+        var persistedLocations = AppDatabase(applicationContext).geoPointDAO().getAll()
+        recentLocations = LinkedList()
+        for (loc in persistedLocations) {
+            recentLocations.add(loc)
+        }
+
         startForeground(123123123, notification)
 
         Timer().schedule(
@@ -99,6 +121,7 @@ class TrackingService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.i(TAG, "onDestroy")
         if (mLocationManager != null) {
             try {
                 mLocationManager!!.removeUpdates(mLocationListener!!)
@@ -106,8 +129,10 @@ class TrackingService : Service() {
                 Log.i(TAG, "fail to remove location listeners, ignore", ex)
             }
         }
-        Log.i(TAG, "onDestroy")
         isTracking = false;
+        GlobalScope.launch {
+            AppDatabase(applicationContext).geoPointDAO().insertAll(recentLocations)
+        }
     }
 
     private fun initializeLocationManager() {
@@ -123,7 +148,7 @@ class TrackingService : Service() {
         calendar.time = currentDate
         calendar.add(Calendar.DATE, -14)
         val twoWeaksAgo = calendar.time
-        while (recentLocations.size > 0 && recentLocations[0].time <= twoWeaksAgo.time ) {
+        while (recentLocations.size > 0 && recentLocations[0].time!! <= twoWeaksAgo.time ) {
             recentLocations.removeFirst()
         }
     }

@@ -14,7 +14,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.room.Room
 import com.bbirds.covidtracker.TrackingService.LocationServiceBinder
+import com.bbirds.covidtracker.data.AppDatabase
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionDeniedResponse
@@ -61,6 +63,11 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this.application, TrackingService::class.java)
         this.application.startService(intent)
         this.application.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+
+        Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "todo-list.db"
+        ).build()
     }
 
     fun buttonStateOn() {
