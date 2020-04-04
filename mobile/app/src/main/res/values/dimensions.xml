@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="button_radius_large">64dp</dimen>
+    <dimen name="button_diameter_large">128dp</dimen>
+    <dimen name="button_progress_diameter">168dp</dimen>
+</resources>
