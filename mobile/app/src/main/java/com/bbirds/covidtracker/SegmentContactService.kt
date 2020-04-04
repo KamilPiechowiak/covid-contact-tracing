@@ -81,9 +81,13 @@ object SegmentContactService {
     fun contact(me: List<GeoPoint>, sick: ArrayList<GeoPoint>): List<GeoPoint> {
         val mySegments = pointsToSegments(me)
         val sickSegments = pointsToSegments(sick)
+//        print("" + mySegments.size + " " + sickSegments.size)
         var i=0
         var j=0
         val dangerousPoints = mutableSetOf<GeoPoint>()
+        if(mySegments.size == 0 || sickSegments.size == 0) {
+            return listOf<GeoPoint>()
+        }
         while(j < sickSegments.size && sickSegments[j].end.time < mySegments[0].begin.time) {
             j++
         }

@@ -82,4 +82,21 @@ class SegmentContactServiceTest {
         )
         assertEquals(listOf<GeoPoint>(GeoPoint(latitude= 52.40383318, longitude= 16.94983608, time=550)), service.contact(a, b))
     }
+
+    @Test
+    fun contactShort() {
+        val a = listOf<GeoPoint>(
+            TrackingService.BREAK_RECORDING,
+            TrackingService.BREAK_RECORDING,
+            GeoPoint(52.4022557,16.9408745, 0),
+            TrackingService.BREAK_RECORDING
+        )
+        val b = arrayListOf<GeoPoint>(
+            GeoPoint(52.40383318,16.94983608, 400),
+            GeoPoint(52.40301497,16.94994332, 430),
+            GeoPoint(52.40257641,16.94987892, 500),
+            GeoPoint(52.40122796,16.94852656, 600)
+        )
+        service.contact(a, b)
+    }
 }
