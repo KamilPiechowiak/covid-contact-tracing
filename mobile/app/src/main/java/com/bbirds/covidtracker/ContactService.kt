@@ -15,7 +15,7 @@ object ContactService {
         return dx*dx+dy*dy
     }
 
-    fun contact(me: Array<GeoPoint>, sick: Array<GeoPoint>): List<GeoPoint> {
+    fun contact(me: List<GeoPoint>, sick: ArrayList<GeoPoint>): List<GeoPoint> {
         val distDiffSq = distDiff * distDiff
         var j = 0
         val dangerousPoints = mutableListOf<GeoPoint>()

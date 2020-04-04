@@ -15,6 +15,9 @@ import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import java.util.*
+import kotlin.concurrent.timerTask
+
 
 class TrackingService : Service() {
 
@@ -24,10 +27,10 @@ class TrackingService : Service() {
 
     private val binder = LocationServiceBinder()
     private var mLocationListener: LocationListener? = null
+    private var recentLocations: LinkedList<GeoPoint> = LinkedList()
     private var mLocationManager: LocationManager? = null
-    private val notificationManager: NotificationManager? = null
-    private val LOCATION_INTERVAL = 500
-    private val LOCATION_DISTANCE = 10
+    private val LOCATION_INTERVAL = 5_000
+    private val LOCATION_DISTANCE = 25
     var isTracking: Boolean = false;
 
     override fun onBind(intent: Intent): IBinder? {
@@ -36,13 +39,9 @@ class TrackingService : Service() {
 
     private inner class LocationListener(provider: String?) :
         android.location.LocationListener {
-        private val lastLocation: Location? = null
         private val TAG = "LocationListener"
-        private var mLastLocation: Location
         override fun onLocationChanged(location: Location) {
-            mLastLocation = location
-
-            Log.i(TAG, "LocationChanged: $location")
+            recentLocations.add(GeoPoint(location.longitude, location.latitude, location.time))
         }
 
         override fun onProviderDisabled(provider: String) {
@@ -62,7 +61,8 @@ class TrackingService : Service() {
         }
 
         init {
-            mLastLocation = Location(provider)
+            var location = Location(provider)
+            recentLocations.add(GeoPoint(location.longitude, location.latitude, location.time))
         }
     }
 
@@ -75,6 +75,14 @@ class TrackingService : Service() {
         super.onCreate()
         Log.i(TAG, "onCreate")
         startForeground(123123123, notification)
+
+        Timer().schedule(
+            timerTask {
+                retention()
+            },
+            0,
+            60*60*1000
+        )
     }
 
     override fun onDestroy() {
@@ -94,6 +102,17 @@ class TrackingService : Service() {
         if (mLocationManager == null) {
             mLocationManager =
                 applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        }
+    }
+
+    private fun retention() {
+        val currentDate = Date()
+        val calendar = Calendar.getInstance()
+        calendar.time = currentDate
+        calendar.add(Calendar.DATE, -14)
+        val twoWeaksAgo = calendar.time
+        while (recentLocations.size > 0 && recentLocations[0].time <= twoWeaksAgo.time ) {
+            recentLocations.removeFirst()
         }
     }
 
