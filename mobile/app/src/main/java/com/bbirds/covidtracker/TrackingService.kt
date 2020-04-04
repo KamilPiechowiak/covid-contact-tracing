@@ -210,8 +210,11 @@ class TrackingService : Service() {
     }
 
     fun handleDetection(result: List<GeoPoint>) {
+        val mapper = ObjectMapper()
+        val string = mapper.writeValueAsString(result)
+        var encoded = Base64.encode(string)
         // TODO strzał na wizualizację Macieja
-        NotificationService(applicationContext).notifyWithURLIntent("http://www.google.com")
+        NotificationService(applicationContext).notifyWithURLIntent("http://${getString(R.string.web_app_host)}/?mark=$encoded")
     }
 
     fun startTracking() {
