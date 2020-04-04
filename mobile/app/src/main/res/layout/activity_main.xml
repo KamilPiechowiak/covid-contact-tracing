@@ -12,9 +12,9 @@
         android:layout_width="@dimen/button_progress_diameter"
         android:layout_height="@dimen/button_progress_diameter"
         android:indeterminate="true"
-        android:indeterminateTintMode="src_atop"
         android:indeterminateTint="@color/colorPrimary"
-        android:visibility="visible"
+        android:indeterminateTintMode="src_atop"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,7 +22,7 @@
         tools:visibility="visible" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/trackButton"
         style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="@dimen/button_diameter_large"
         android:layout_height="@dimen/button_diameter_large"
@@ -42,6 +42,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button" />
+        app:layout_constraintTop_toBottomOf="@+id/trackButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
