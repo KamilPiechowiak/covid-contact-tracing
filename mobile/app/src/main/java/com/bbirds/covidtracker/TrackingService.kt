@@ -22,15 +22,17 @@ import kotlin.concurrent.timerTask
 class TrackingService : Service() {
 
     companion object {
-        val TAG = "TrackingService"
+        const val TAG = "TrackingService"
+        const val RETENTION_PERIOD = 60*60*1000L
+        const val LOCATION_INTERVAL = 5_000L
+        const val LOCATION_DISTANCE = 25L
+        val BREAK_RECORDING = GeoPoint(-1_000.0, -1_000.0, -1)
     }
 
     private val binder = LocationServiceBinder()
     private var mLocationListener: LocationListener? = null
     private var recentLocations: LinkedList<GeoPoint> = LinkedList()
     private var mLocationManager: LocationManager? = null
-    private val LOCATION_INTERVAL = 5_000
-    private val LOCATION_DISTANCE = 25
     var isTracking: Boolean = false;
 
     override fun onBind(intent: Intent): IBinder? {
@@ -40,6 +42,7 @@ class TrackingService : Service() {
     private inner class LocationListener(provider: String?) :
         android.location.LocationListener {
         private val TAG = "LocationListener"
+
         override fun onLocationChanged(location: Location) {
             recentLocations.add(GeoPoint(location.longitude, location.latitude, location.time))
         }
@@ -61,6 +64,7 @@ class TrackingService : Service() {
         }
 
         init {
+            recentLocations.add(BREAK_RECORDING)
             var location = Location(provider)
             recentLocations.add(GeoPoint(location.longitude, location.latitude, location.time))
         }
@@ -78,10 +82,18 @@ class TrackingService : Service() {
 
         Timer().schedule(
             timerTask {
+                heartbeat()
+            },
+            RETENTION_PERIOD / 2,
+            RETENTION_PERIOD
+        )
+
+        Timer().schedule(
+            timerTask {
                 retention()
             },
             0,
-            60*60*1000
+            RETENTION_PERIOD
         )
     }
 
@@ -114,6 +126,10 @@ class TrackingService : Service() {
         while (recentLocations.size > 0 && recentLocations[0].time <= twoWeaksAgo.time ) {
             recentLocations.removeFirst()
         }
+    }
+
+    private fun heartbeat() {
+
     }
 
     fun startTracking() {
