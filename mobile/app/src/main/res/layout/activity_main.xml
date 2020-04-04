@@ -27,7 +27,7 @@
         android:layout_width="@dimen/button_diameter_large"
         android:layout_height="@dimen/button_diameter_large"
         android:background="@drawable/rounded_button"
-        android:enabled="false"
+        android:enabled="true"
         android:soundEffectsEnabled="true"
         android:text="Track"
         app:layout_constraintBottom_toBottomOf="parent"

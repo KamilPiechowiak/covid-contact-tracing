@@ -33,7 +33,6 @@ class MainActivity : AppCompatActivity() {
             if (name.endsWith(TrackingService.TAG)) {
                 gpsService = (service as LocationServiceBinder).service
                 progressBar.isVisible = false
-                trackButton.isEnabled = true
                 if (gpsService!!.isTracking) {
                     buttonStateOn()
                     Toast.makeText(this@MainActivity,  "Tracking device!", Toast.LENGTH_LONG).show()
