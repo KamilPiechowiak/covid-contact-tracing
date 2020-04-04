@@ -7,9 +7,11 @@ import java.util.*
 
 // latitude longitude timestamp
 @Entity
-data class GeoPoint(var lat: Double?, var long: Double?, var time: Long?, @PrimaryKey(autoGenerate = true) var id: Int? = null) {
+data class GeoPoint(var latitude: Double, var longitude: Double, var time: Long, @PrimaryKey(autoGenerate = true) var id: Int = 0) {
 
-    constructor(): this(null, null, null, null){}
+    constructor() : this(-3_000.0, -3_000.0, -3, 0) {
+
+    }
 
 }
 
@@ -25,7 +27,7 @@ interface GeoPointDAO {
 
 }
 
-@Database(entities = arrayOf(GeoPoint::class), version = 1)
+@Database(entities = arrayOf(GeoPoint::class), version = 7)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun geoPointDAO(): GeoPointDAO
     companion object {
@@ -37,7 +39,8 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         private fun buildDatabase(context: Context) = Room.databaseBuilder(context,
-            AppDatabase::class.java, "todo-list.db")
+            AppDatabase::class.java, "geopoint-list.db")
+            .fallbackToDestructiveMigration()
             .build()
     }
 }

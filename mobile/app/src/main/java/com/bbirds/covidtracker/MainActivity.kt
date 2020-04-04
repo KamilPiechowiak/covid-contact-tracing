@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import com.bbirds.covidtracker.TrackingService.LocationServiceBinder
 import com.bbirds.covidtracker.data.AppDatabase
 import com.karumi.dexter.Dexter
@@ -64,10 +65,7 @@ class MainActivity : AppCompatActivity() {
         this.application.startService(intent)
         this.application.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 
-        Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java, "todo-list.db"
-        ).build()
+        AppDatabase(applicationContext)
     }
 
     fun buttonStateOn() {

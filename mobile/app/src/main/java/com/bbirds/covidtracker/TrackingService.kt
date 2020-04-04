@@ -47,13 +47,16 @@ class TrackingService : Service() {
         private val TAG = "LocationListener"
 
         override fun onLocationChanged(location: Location) {
-            recentLocations.add(
-                GeoPoint(
-                    location.longitude,
-                    location.latitude,
-                    location.time
+            synchronized(recentLocations) {
+                recentLocations.add(
+                    GeoPoint(
+                        location.latitude,
+                        location.longitude,
+                        location.time
+                    )
                 )
-            )
+            }
+            Log.d(TAG, "onLocationChanged: ${recentLocations.last}")
         }
 
         override fun onProviderDisabled(provider: String) {
@@ -73,15 +76,9 @@ class TrackingService : Service() {
         }
 
         init {
-            recentLocations.add(BREAK_RECORDING)
-            var location = Location(provider)
-            recentLocations.add(
-                GeoPoint(
-                    location.longitude,
-                    location.latitude,
-                    location.time
-                )
-            )
+            synchronized(recentLocations) {
+                recentLocations.add(BREAK_RECORDING)
+            }
         }
     }
 
@@ -93,30 +90,32 @@ class TrackingService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "onCreate")
+        GlobalScope.launch {
+            synchronized(recentLocations) {
+                var persistedLocations = AppDatabase(applicationContext).geoPointDAO().getAll()
+                recentLocations = LinkedList()
+                recentLocations.addAll(persistedLocations)
+            }
+            Log.d(TAG, recentLocations.toString())
 
-        var persistedLocations = AppDatabase(applicationContext).geoPointDAO().getAll()
-        recentLocations = LinkedList()
-        for (loc in persistedLocations) {
-            recentLocations.add(loc)
+            startForeground(123123123, notification)
+
+            Timer().schedule(
+                timerTask {
+                    heartbeat()
+                },
+                RETENTION_PERIOD / 2,
+                RETENTION_PERIOD
+            )
+
+            Timer().schedule(
+                timerTask {
+                    retention()
+                },
+                0,
+                RETENTION_PERIOD
+            )
         }
-
-        startForeground(123123123, notification)
-
-        Timer().schedule(
-            timerTask {
-                heartbeat()
-            },
-            RETENTION_PERIOD / 2,
-            RETENTION_PERIOD
-        )
-
-        Timer().schedule(
-            timerTask {
-                retention()
-            },
-            0,
-            RETENTION_PERIOD
-        )
     }
 
     override fun onDestroy() {
@@ -131,7 +130,9 @@ class TrackingService : Service() {
         }
         isTracking = false;
         GlobalScope.launch {
-            AppDatabase(applicationContext).geoPointDAO().insertAll(recentLocations)
+            synchronized(recentLocations) {
+                AppDatabase(applicationContext).geoPointDAO().insertAll(recentLocations)
+            }
         }
     }
 
@@ -148,8 +149,10 @@ class TrackingService : Service() {
         calendar.time = currentDate
         calendar.add(Calendar.DATE, -14)
         val twoWeaksAgo = calendar.time
-        while (recentLocations.size > 0 && recentLocations[0].time!! <= twoWeaksAgo.time ) {
-            recentLocations.removeFirst()
+        synchronized(recentLocations) {
+            while (recentLocations.size > 0 && recentLocations[0].time!! <= twoWeaksAgo.time) {
+                recentLocations.removeFirst()
+            }
         }
     }
 
