@@ -2,17 +2,23 @@ package com.bbirds.covidtracker
 
 
 import android.Manifest
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
 import androidx.core.view.isVisible
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -65,6 +71,7 @@ class MainActivity : AppCompatActivity() {
         this.application.startService(intent)
         this.application.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 
+        NotificationService(applicationContext)
         AppDatabase(applicationContext)
     }
 

@@ -1,18 +1,18 @@
 package com.bbirds.covidtracker
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.SharedPreferences
 import android.location.Location
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Binder
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.system.Os.link
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
@@ -178,8 +178,12 @@ class TrackingService : Service() {
     private fun heartbeatCallback(response: String) {
         val mapper = ObjectMapper()
         var rootNode = mapper.readTree(response)
+        var result: MutableList<GeoPoint> = ArrayList()
         if (rootNode.isArray) {
             for (arrayNode in rootNode) {
+                synchronized(consumerOffset) {
+                    consumerOffset += arrayNode.size()
+                }
                 var sickPointsList: ArrayList<GeoPoint> = ArrayList(arrayNode.size())
                 if (rootNode.isArray) {
                     for (pointNode in arrayNode) {
@@ -191,15 +195,23 @@ class TrackingService : Service() {
                     }
                 }
                 synchronized(recentLocations) {
-                    var result = if (recentLocations.size > 0 && sickPointsList.size > 0) {
+                    result.addAll(if (recentLocations.size > 0 && sickPointsList.size > 0) {
                         SegmentContactService.contact(recentLocations, sickPointsList)
                     } else {
-                        null
-                    }
-//                    result?.
+                        listOf()
+                    })
                 }
             }
         }
+
+        if (result.isNotEmpty()) {
+            handleDetection(result)
+        }
+    }
+
+    fun handleDetection(result: List<GeoPoint>) {
+        // TODO strzał na wizualizację Macieja
+        NotificationService(applicationContext).notifyWithURLIntent("http://www.google.com")
     }
 
     fun startTracking() {
