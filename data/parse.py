@@ -9,7 +9,7 @@ def getDist(a, b):
     dy = abs(a[0]-b[0])/180*np.pi*R
     return (dx**2 + dy**2)**0.5
 
-def parseGPX(name):
+def parseGPX(name, dt=0):
     tree = ET.parse(name)
     root = tree.getroot()
     arr = []
@@ -50,14 +50,25 @@ def parseGPX(name):
     for i in range(len(arr)):
         if arr[i][2] == -1:
             arr[i][2] = int((suf[i]*arr[prefId[i]][2]+pref[i]*arr[sufId[i]][2])/(suf[i]+pref[i]))
+        arr[i][2]+=dt
     
     return arr
 
 if __name__ == "__main__":
-    # arr = parseGPX("gpx/GraphHopper(1).gpx")
-    # import matplotlib.pyplot as plt
-    # plt.plot(np.arange(len(arr)), [x[2] for x in arr])
-    # plt.show()
-    for i in range(1, 6):
-        with open("../backend/data/" + str(i) + ".json", "w") as f:
-            json.dump(parseGPX("gpx/GraphHopper(" + str(i) + ").gpx"), f)
+    import sys
+    if len(sys.argv) < 2:
+        mode = "default"
+    else:
+        mode = sys.argv[1].lower()
+    if mode == "sick":
+        for i in range(1, 6):
+            with open("../backend/data/" + str(i) + ".json", "w") as f:
+                json.dump(parseGPX("gpx/GraphHopper(" + str(i) + ").gpx"), f)
+    elif mode == "client":
+        with open("client.json", "w") as f:
+            json.dump(parseGPX("gpx/client.gpx", dt=-int(60*60*3.5)), f)
+    else:
+        arr = parseGPX("gpx/GraphHopper(1).gpx")
+        import matplotlib.pyplot as plt
+        plt.plot(np.arange(len(arr)), [x[2] for x in arr])
+        plt.show()
