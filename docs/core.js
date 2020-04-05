@@ -26,6 +26,33 @@ $(document).ready(function() {
   });
 
   /// map ///
+  function parse_query_string(query) {
+    var vars = query.split("&");
+    var query_string = {};
+    for (var i = 0; i < vars.length; i++) {
+      var pair = vars[i].split("=");
+      var key = decodeURIComponent(pair[0]);
+      var value = decodeURIComponent(pair[1]);
+      if (typeof query_string[key] === "undefined") {
+        query_string[key] = decodeURIComponent(value);
+      } else if (typeof query_string[key] === "string") {
+        var arr = [ query_string[key], decodeURIComponent(value) ];
+        query_string[key] = arr;
+      } else {
+        query_string[key].push(decodeURIComponent(value));
+      }
+    }
+    return query_string;
+  }
+
+  var query = window.location.search.substring(1);
+  var qs = parse_query_string(query);
+
+
+if (qs["mobile"] != null) {
+	console.log("mobile")
+	$('#header').remove();
+}
 
   var map = L.map('mapid').setView([ 52.4064, 16.9252 ], 14);
 
@@ -83,28 +110,6 @@ L.polygon(
   }
 
   // mark points from map
-
-  function parse_query_string(query) {
-    var vars = query.split("&");
-    var query_string = {};
-    for (var i = 0; i < vars.length; i++) {
-      var pair = vars[i].split("=");
-      var key = decodeURIComponent(pair[0]);
-      var value = decodeURIComponent(pair[1]);
-      if (typeof query_string[key] === "undefined") {
-        query_string[key] = decodeURIComponent(value);
-      } else if (typeof query_string[key] === "string") {
-        var arr = [ query_string[key], decodeURIComponent(value) ];
-        query_string[key] = arr;
-      } else {
-        query_string[key].push(decodeURIComponent(value));
-      }
-    }
-    return query_string;
-  }
-
-  var query = window.location.search.substring(1);
-  var qs = parse_query_string(query);
 
   console.log(qs);
 
