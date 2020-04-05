@@ -1,5 +1,6 @@
 package com.bbirds.covidtracker
 
+import com.bbirds.covidtracker.data.ContactPoint
 import com.bbirds.covidtracker.data.GeoPoint
 import kotlin.math.abs
 import kotlin.math.cos
@@ -78,15 +79,15 @@ object SegmentContactService {
         return segments
     }
 
-    fun contact(me: List<GeoPoint>, sick: ArrayList<GeoPoint>): List<GeoPoint> {
+    fun contact(me: List<GeoPoint>, sick: ArrayList<GeoPoint>): List<ContactPoint> {
         val mySegments = pointsToSegments(me)
         val sickSegments = pointsToSegments(sick)
 //        print("" + mySegments.size + " " + sickSegments.size)
         var i=0
         var j=0
-        val dangerousPoints = mutableSetOf<GeoPoint>()
+        val dangerousPoints = mutableSetOf<ContactPoint>()
         if(mySegments.size == 0 || sickSegments.size == 0) {
-            return listOf<GeoPoint>()
+            return listOf<ContactPoint>()
         }
         while(j < sickSegments.size && sickSegments[j].end.time < mySegments[0].begin.time) {
             j++
@@ -98,7 +99,7 @@ object SegmentContactService {
             if(mySegments[i].valid && sickSegments[j].valid) {
                 val d = computeDist(mySegments[i].begin, mySegments[i].end, sickSegments[j].begin, sickSegments[j].end)
                 if(d < distDiff) {
-                    dangerousPoints.add(mySegments[i].end)
+                    dangerousPoints.add(ContactPoint(mySegments[i].end, d))
                 }
             }
 //            print("" + mySegments[i] + " " + sickSegments[j] + "\n")
@@ -108,6 +109,6 @@ object SegmentContactService {
                 j++
             }
         }
-        return dangerousPoints.toList().sortedBy { x -> x.time }
+        return dangerousPoints.toList().sortedBy { x -> x.point.time }
     }
 }
