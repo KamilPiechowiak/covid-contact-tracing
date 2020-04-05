@@ -63,6 +63,7 @@ if (qs["mobile"] != null) {
 }
 
   var map = L.map('mapid').setView([ 52.4064, 16.9252 ], 14);
+var miniMap = new L.Control.GlobeMiniMap().addTo(map);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
      attribution :
