@@ -1,0 +1,177 @@
+<html>
+
+<head>
+	<meta charset="UTF-8">
+
+    <link rel="stylesheet" href="assets/normalize.css">
+    <link rel="stylesheet" href="assets/spectre.css">
+    <link rel="stylesheet" href="assets/spectre-exp.css">
+    <link rel="stylesheet" href="assets/spectre-icons.css">
+
+    <script src="assets/jquery-3.4.1.min.js"></script>
+    <script src="assets/moment-with-locales.min.js"></script>
+
+    <script src="assets/jquery.CalendarHeatmap.min.js"></script>
+    <link rel="stylesheet" href="assets/jquery.CalendarHeatmap.css">
+
+    <title>covid-contact-tracer</title>
+
+    <!--- leaflet --->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
+
+	<script
+	 src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"/></script>
+
+    <link rel="stylesheet" href="custom.css">
+    <script src="core.js"></script>
+</head>
+
+<body>
+
+<style>
+#main {
+margin:0px;
+}
+</style>
+
+    <div class="columns" id="main">
+        <div class="column header">
+            <h1>Monday <kbd>public</kbd>
+
+                <button class="btn btn-primary float-right"><i class="icon
+						icon-download"></i> tracker</button>
+            </h1>
+
+            <li class="divider" data-content="OUTBREAKS"></li>
+            <br>
+            <div class="p-centered" id="heatmap"></div>
+            <br>
+            <li class="divider" data-content="ACTIVITY"></li>
+
+
+            <br>
+
+            <style>
+                .alert-box {
+                    min-width: 50px;
+					height: 60px;
+                    vertical-align: middle;
+                    line-height: 60px;
+                }
+            </style>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-left"><a class="timeline-icon tooltip" href="#timeline-example-1" data-tooltip="March 2016"></a></div>
+                    <div class="timeline-content">
+                        <div class="tile">
+                            <div class="tile-content">
+                                <p class="tile-subtitle"><samp>1 April
+                                        2020</samp></p>
+                                <p class="tile-title">
+
+The Minister of Health informs that you must not leave the house for
+recreational purposes. <a href="#">Find out more.</a>
+
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-left"><a class="timeline-icon icon-lg
+							tooltip" href="#timeline-example-2" data-tooltip="February 2017"><i class="icon icon-location"></i></a></div>
+                    <div class="timeline-content">
+                        <div class="tile">
+                            <div class="tile-content">
+                                <p class="tile-subtitle"> <samp>2 April 2020</samp></p>
+                                <p class="tile-title">
+
+                                    <div class="container">
+                                        <div class="columns">
+                                            <div class="column col-lg-auto col-3">
+                                                <div class="bg-success
+													text-white text-large
+													text-bold text-center
+													alert-box">
+                                                    13
+                                                </div>
+
+                                            </div>
+                                            <div class="column">
+
+                                                Person with positive result was
+                                                moving at <mark>16:21-16:55</mark> from
+                                                <abbr title="?">Biurowiec Allegro</abbr> to <abbr title="?">Politechnika
+                                                    Centrum Wykladowe</abbr>.
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </p>
+                            </div>
+                            <div class="tile-action">
+                                <button class="btn">View</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div class="timeline-item">
+                    <div class="timeline-left"><a class="timeline-icon icon-lg
+							tooltip" href="#timeline-example-2" data-tooltip="February 2017"><i class="icon icon-location"></i></a></div>
+                    <div class="timeline-content">
+                        <div class="tile">
+                            <div class="tile-content">
+                                <p class="tile-subtitle"> <samp>3 April 2020</samp></p>
+                                <p class="tile-title">
+
+                                    <div class="container">
+                                        <div class="columns">
+                                            <div class="column col-lg-auto col-3">
+                                                <div class="bg-secondary
+													text-primary 
+													text-bold text-center
+													alert-box">
+                                                    SHOP
+                                                </div>
+                                            </div>
+                                            <div class="column">
+
+
+                                                Person with positive result was
+                                                moving at
+                                                <mark>12:04-12:29</mark> in
+                                                <abbr title="?">Lidl (Główna 28)</abbr>.
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </p>
+                            </div>
+                            <div class="tile-action">
+                                <button class="btn">View</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+        </div>
+        <div id="mapid" class="column map bg-gray">
+        </div>
+    </div>
+
+</body>
+
+</html>
