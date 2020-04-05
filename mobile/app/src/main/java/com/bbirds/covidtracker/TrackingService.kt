@@ -22,6 +22,7 @@ import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.bbirds.covidtracker.data.AppDatabase
+import com.bbirds.covidtracker.data.ContactPoint
 import com.bbirds.covidtracker.data.GeoPoint
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.GlobalScope
@@ -161,7 +162,7 @@ class TrackingService : Service() {
         Log.i(TAG, "heartbeatCallback")
         val mapper = ObjectMapper()
         var rootNode = mapper.readTree(response)
-        var result: MutableList<GeoPoint> = ArrayList()
+        var result: MutableList<ContactPoint> = ArrayList()
         synchronized(consumerOffset) {
             consumerOffset += rootNode.size()
         }
@@ -192,9 +193,15 @@ class TrackingService : Service() {
         }
     }
 
-    fun handleDetection(result: List<GeoPoint>) {
+    fun handleDetection(result: List<ContactPoint>) {
+        var listList: MutableList<List<Any>> = ArrayList()
+        for (p in result) {
+            var geo = p.point
+            listList.add(listOf(geo.latitude, geo.longitude, geo.time, p.dist))
+        }
         val mapper = ObjectMapper()
-        val string = mapper.writeValueAsString(result)
+        val string = mapper.writeValueAsString(listList)
+        Log.i(TAG, string)
         var encoded = Base64.encode(string)
         Log.d(TAG, "encoded: $encoded")
         NotificationService(applicationContext).notifyWithURLIntent("https://kamilpiechowiak.github.io/covid-contact-tracing/?mark=$encoded")
