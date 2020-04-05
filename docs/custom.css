@@ -1,8 +1,8 @@
 #header {
-    width: 400px;
+    /*width: 400px;*/
     overflow: scroll;
     min-width: 400px;
-    max-width: 400px;
+    /*max-width: 400px;*/
     height: 100vh;
     padding: 1em;
 }
@@ -22,3 +22,11 @@ margin:0px;
                     line-height: 60px;
                 }
 
+@media only screen and (max-width: 1024px) {
+				#main {
+				    flex-direction: column-reverse;
+				}
+				.map {
+					height: 80vh;
+				}
+}
