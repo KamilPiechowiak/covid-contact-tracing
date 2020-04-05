@@ -2,26 +2,19 @@ package com.bbirds.covidtracker
 
 
 import android.Manifest
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
 import androidx.core.view.isVisible
-import androidx.room.Room
-import androidx.room.RoomDatabase
 import com.bbirds.covidtracker.TrackingService.LocationServiceBinder
 import com.bbirds.covidtracker.data.AppDatabase
 import com.karumi.dexter.Dexter
@@ -78,11 +71,13 @@ class MainActivity : AppCompatActivity() {
     fun buttonStateOn() {
         trackButton.text = getString(R.string.tracking_off_description)
         trackButton.setOnClickListener { trackingOff() }
+        trackButton.setBackgroundResource(R.drawable.rounded_button)
     }
 
     fun buttonStateOff() {
         trackButton.text = getString(R.string.tracking_on_description)
         trackButton.setOnClickListener { trackingOn() }
+        trackButton.setBackgroundResource(R.drawable.rounded_button_gray)
     }
 
     fun trackingOn() {
