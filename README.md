@@ -2,7 +2,7 @@
 
 **Slides:** https://docs.google.com/presentation/d/1gFF3ozhVdIxJ0lvuG-2v--J47O-XtUtBN4bW2Zfq6LI/edit?usp=sharing
 
-![](docs/screen.png)
+![](docs/screen-1.png)
 
 **Authors:**
 

@@ -119,12 +119,13 @@ L.polygon(
 		var dateString = moment.unix(data[i][2]).format('LLLL');
 
       console.log(data[i][0]);
-      var popup = L.popup()
-                      .setLatLng([ data[i][0], data[i][1] ])
-                      .setContent(dateString)
-                      .addTo(map);
+		//      var popup = L.popup()
+		//              .setLatLng([ data[i][0], data[i][1] ])
+		//              .setContent(dateString)
+		//              .addTo(map);
       var marker = L.marker([ data[i][0], data[i][1] ]).addTo(map);
-    }
+	marker.bindPopup(dateString);
+	}
   }
 
   // mark points from map
