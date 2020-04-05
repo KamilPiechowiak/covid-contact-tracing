@@ -1,16 +1,22 @@
 $(document).ready(function() {
   /// heatmap ///
 
+	var seed = 1;
+function random() {
+    var x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+}
+
   function randomDate(start, end) {
-    var date = new Date(+start + Math.random() * (end - start));
+    var date = new Date(+start + random() * (end - start));
     return moment(date).format('YYYY-MM-DD');
   }
 
-  var events = (Math.random() * 200).toFixed(0);
+  var events = (random() * 200).toFixed(0);
   var data = [];
   for (var i = 0; i < events; i++) {
     data.push({
-      count : parseInt((Math.random() * 200).toFixed(0)),
+      count : parseInt((random() * 200).toFixed(0)),
       date : randomDate(moment().subtract(16, 'days').format('x'),
                         moment().format('x'))
     });
@@ -73,6 +79,15 @@ L.polygon(
 		return (1000*(p1[0] - p2[0])) ** 2 + (1000*(p1[1] - p2[1])) ** 2
 	}
 
+ function draw_pureroute(data, color = "red") {
+    var latlngs = [];
+	  for (i = 1; i < data.length; i++) {
+		  latlngs.push([ data[i][0], data[i][1] ]);
+    }
+    return L.polyline(latlngs, {color : color}).addTo(map);
+  }
+
+
   function draw_route(data, color = "red") {
     var latlngs = [];
 
@@ -98,7 +113,7 @@ L.polygon(
     for (i = 0; i < data.length; i++) {
       // latlngs.push([ data[i][0], data[i][1] ]);
 
-      var dateString = moment.unix(data[i][2]).format("MM/DD/YYYY");
+		var dateString = moment.unix(data[i][2]).format('LLLL');
 
       console.log(data[i][0]);
       var popup = L.popup()
@@ -152,6 +167,27 @@ L.polygon(
   $.each(files, function(i, filename) {
     $.getJSON(filename, function(data) { paths[filename] = data; });
   })
+
+polys = {}
+$( "button#view" ).on( "click", function() {
+				var idx= $( this ).attr("case");
+
+	if (idx in polys) {
+				$( this ).text("View")
+		console.log("remove");
+		map.removeLayer(polys[idx]);
+		delete polys[idx];
+	} else {
+
+		$( this ).text("Hide")
+	poly = draw_pureroute(paths["data/"+idx+".json"]);
+						console.log("bef", polys[idx]);
+		polys[idx] = poly;
+				console.log("show", polys);
+	}
+});
+
+
 
   loaded = false;
 
