@@ -112,6 +112,12 @@ L.polygon(
     return L.polyline(latlngs, {color : color}).addTo(map);
   }
 
+function centerLeafletMapOnMarker(map, marker) {
+  var latLngs = [ marker.getLatLng() ];
+  var markerBounds = L.latLngBounds(latLngs);
+  map.fitBounds(markerBounds);
+}
+
   function draw_marks(data, color = "red") {
     for (i = 0; i < data.length; i++) {
       // latlngs.push([ data[i][0], data[i][1] ]);
@@ -125,7 +131,10 @@ L.polygon(
 		//              .addTo(map);
       var marker = L.marker([ data[i][0], data[i][1] ]).addTo(map);
 	marker.bindPopup(dateString);
+		//map.setView(marker.getLatLng(),13);
+		//map.fitBounds(marker.getBounds());
 	}
+	centerLeafletMapOnMarker(map, marker);
   }
 
   // mark points from map
