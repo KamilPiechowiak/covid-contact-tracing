@@ -1,6 +1,8 @@
 $(document).ready(function() {
   /// heatmap ///
 
+	$("#day").text(moment().format('dddd'));
+
 	var seed = 1;
 function random() {
     var x = Math.sin(seed++) * 10000;
@@ -187,7 +189,15 @@ $( "button#view" ).on( "click", function() {
 	}
 });
 
+//Apr 4, 2020
+//Apr 3, 2020
 
+$(".ch-day").on("click", function() {
+
+	var title= $( this ).attr("title");
+	console.log(title.split('on ')[1]);
+
+});
 
   loaded = false;
 
