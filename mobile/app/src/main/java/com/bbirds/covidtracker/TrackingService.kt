@@ -106,24 +106,6 @@ class TrackingService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "onCreate")
-        queue = Volley.newRequestQueue(applicationContext)
-        GlobalScope.launch {
-            loadRecentLocations()
-            loadOffset()
-
-            Log.d(TAG, recentLocations.toString())
-
-            startForeground(ID, notification)
-
-            heartbeatTimer = Timer()
-            heartbeatTimer!!.schedule(
-                timerTask {
-                    heartbeat()
-                },
-                RETENTION_PERIOD / 2,
-                RETENTION_PERIOD
-            )
-        }
     }
 
     override fun onDestroy() {
@@ -152,45 +134,50 @@ class TrackingService : Service() {
     }
 
     private fun retention() {
+        Log.i(TAG, "retention")
         val currentDate = Date()
         val calendar = Calendar.getInstance()
         calendar.time = currentDate
         calendar.add(Calendar.DATE, -14)
         val twoWeaksAgo = calendar.time
         synchronized(recentLocations) {
-            while (recentLocations.size > 0 && recentLocations[0].time <= twoWeaksAgo.time) {
+            while (recentLocations.size > 0 && recentLocations[0].time * 1000 <= twoWeaksAgo.time) {
                 recentLocations.removeFirst()
             }
         }
     }
 
     private fun heartbeat() {
-        if (recentLocations.size > 0) {
-            val url = "http://${getString(R.string.python_backend_host)}/heartbeat/$consumerOffset"
-            val stringRequest = StringRequest(
-                Request.Method.GET, url,
-                Response.Listener<String> { response -> heartbeatCallback(response) },
-                Response.ErrorListener { er -> Log.e(TAG, "Response Error $er") })
-            queue!!.add(stringRequest)
+        synchronized(recentLocations) {
+            if (recentLocations.size > 0) {
+                val url =
+                    "http://${getString(R.string.python_backend_host)}/heartbeat/$consumerOffset"
+                val stringRequest = StringRequest(
+                    Request.Method.GET, url,
+                    Response.Listener<String> { response -> heartbeatCallback(response) },
+                    Response.ErrorListener { er -> Log.e(TAG, "Response Error $er") })
+                queue!!.add(stringRequest)
+            }
         }
     }
 
     private fun heartbeatCallback(response: String) {
+        Log.i(TAG, "heartbeatCallback")
         val mapper = ObjectMapper()
         var rootNode = mapper.readTree(response)
         var result: MutableList<GeoPoint> = ArrayList()
+        synchronized(consumerOffset) {
+            consumerOffset += rootNode.size()
+        }
         if (rootNode.isArray) {
             for (arrayNode in rootNode) {
-                synchronized(consumerOffset) {
-                    consumerOffset += arrayNode.size()
-                }
                 var sickPointsList: ArrayList<GeoPoint> = ArrayList(arrayNode.size())
-                if (rootNode.isArray) {
+                if (arrayNode.isArray) {
                     for (pointNode in arrayNode) {
                         sickPointsList.add(
                             GeoPoint(
-                                latitude = pointNode.get(0).doubleValue(),
-                                longitude = pointNode.get(1).doubleValue(),
+                                latitude = pointNode.get(0)!!.asDouble(),
+                                longitude = pointNode.get(1)!!.asDouble(),
                                 time = pointNode.get(2).longValue()))
                     }
                 }
@@ -237,6 +224,24 @@ class TrackingService : Service() {
                 RETENTION_PERIOD
             )
             Log.i(TAG, "Started tracking")
+            queue = Volley.newRequestQueue(applicationContext)
+            GlobalScope.launch {
+                loadRecentLocations()
+                loadOffset()
+
+                Log.d(TAG, recentLocations.toString())
+
+                startForeground(ID, notification)
+
+                heartbeatTimer = Timer()
+                heartbeatTimer!!.schedule(
+                    timerTask {
+                        heartbeat()
+                    },
+                    RETENTION_PERIOD / 2,
+                    RETENTION_PERIOD
+                )
+            }
         } catch (ex: SecurityException) {
             Log.i(TAG, "fail to request location update, ignore $ex")
         } catch (ex: IllegalArgumentException) {
@@ -288,7 +293,7 @@ class TrackingService : Service() {
         synchronized(consumerOffset) {
             val sharedPreferences: SharedPreferences =
                 getSharedPreferences(PREFS_FILENAME, Context.MODE_PRIVATE)
-            consumerOffset = sharedPreferences.getInt("OFFSET", 0)
+//            consumerOffset = sharedPreferences.getInt("OFFSET", 0)
         }
     }
 
