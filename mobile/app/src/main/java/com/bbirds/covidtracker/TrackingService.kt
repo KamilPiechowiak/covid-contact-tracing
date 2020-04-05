@@ -92,12 +92,6 @@ class TrackingService : Service() {
         ) {
             Log.e(TAG, "onStatusChanged: $status")
         }
-
-        init {
-            synchronized(recentLocations) {
-                recentLocations.add(BREAK_RECORDING)
-            }
-        }
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -327,6 +321,7 @@ class TrackingService : Service() {
             } else {
                 TODO("VERSION.SDK_INT < O")
             }
+            recentLocations.add(BREAK_RECORDING)
         }
     }
 
